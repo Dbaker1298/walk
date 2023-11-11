@@ -6,8 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	"github.com/gogo/protobuf/plugin/size"
 )
 
 type config struct {
