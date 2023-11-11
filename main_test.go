@@ -59,7 +59,7 @@ func createTempDir(t *testing.T, files map[string]int) (dirname string, cleanup 
 	return tempDir, func() { os.RemoveAll(tempDir) }
 }
 
-func TestRunDelExtension(t *testing) {
+func TestRunDelExtension(t *testing.T) {
 	testCases := []struct {
 		name        string
 		cfg         config
