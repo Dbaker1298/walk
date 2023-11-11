@@ -36,7 +36,7 @@ func delFile(path string, delLogger *log.Logger) error {
 }
 
 func archiveFile(destDir, root, path string) error {
-	info, err := os.Stat(path)
+	info, err := os.Stat(destDir)
 	if err != nil {
 		return err
 	}
