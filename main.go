@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 )
@@ -20,22 +21,41 @@ type config struct {
 
 	// delete files
 	del bool
+
+	// log destination writer
+	wLog io.Writer
 }
 
 func main() {
 	// Parsing command line flags
 	root := flag.String("root", ".", "Root directory to start")
+	logFile := flag.String("log", "", "Log deletes to this file")
 	list := flag.Bool("list", false, "List files only")
 	del := flag.Bool("del", false, "Delete files")
 	ext := flag.String("ext", "", "File extension to filter out")
 	size := flag.Int64("size", 0, "Minimum file size")
 	flag.Parse()
 
+	var (
+		f   = os.Stdout
+		err error
+	)
+
+	if *logFile != "" {
+		f, err = os.OpenFile(*logFile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0o644)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+			os.Exit(1)
+		}
+		defer f.Close()
+	}
+
 	c := config{
 		ext:  *ext,
 		size: *size,
 		list: *list,
 		del:  *del,
+		wLog: f,
 	}
 
 	if err := run(*root, os.Stdout, c); err != nil {
@@ -45,6 +65,8 @@ func main() {
 }
 
 func run(root string, out io.Writer, cfg config) error {
+	delLogger := log.New(cfg.wLog, "DELETED FILE: ", log.LstdFlags)
+
 	// Walk the directory tree
 	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		// Check if we have an error
@@ -63,7 +85,7 @@ func run(root string, out io.Writer, cfg config) error {
 
 		// Delete files
 		if cfg.del {
-			return delFile(path)
+			return delFile(path, delLogger)
 		}
 
 		// List is the default option if nothing else was set
