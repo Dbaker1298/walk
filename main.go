@@ -40,3 +40,25 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+func run(root string, out io.Writer, cfg config) error {
+	// Walk the directory tree
+	return filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		// Check if we have an error
+		if err != nil {
+			return err
+		}
+
+		if filterOut(path, cfg.ext, cfg.size, info) {
+			return nil
+		}
+
+		// If list was explicitly set, don't do anything else
+		if cfg.list {
+			return listFile(path, out)
+		}
+
+		// List is the default option if nothing else was set
+		return listFile(path, out)
+	})
+}
